@@ -1,4 +1,4 @@
-package webserver
+package handlers
 
 import (
 	"fmt"
@@ -6,16 +6,17 @@ import (
 
 	"github.com/jmrawlins/JCHashWebServer/hash"
 	"github.com/jmrawlins/JCHashWebServer/hash/datastore"
+	"github.com/jmrawlins/JCHashWebServer/services"
 )
 
 type HashCreateHandler struct {
-	ds        datastore.DataStore
-	scheduler HashJobScheduler
+	Ds        datastore.DataStore
+	Scheduler services.HashJobScheduler
 }
 
 func (handler HashCreateHandler) HandleHashCreate(resp http.ResponseWriter, req *http.Request) {
-	id, _ := handler.ds.GetNextId() // TODO handle error
-	handler.scheduler.Schedule(hash.HashCreateRequest{Id: id, Password: req.FormValue("password")})
+	id, _ := handler.Ds.GetNextId() // TODO handle error
+	handler.Scheduler.Schedule(hash.HashCreateRequest{Id: id, Password: req.FormValue("password")})
 
 	fmt.Fprintf(resp, "%v", id)
 }

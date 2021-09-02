@@ -1,4 +1,4 @@
-package webserver
+package services
 
 import (
 	"github.com/jmrawlins/JCHashWebServer/hash"

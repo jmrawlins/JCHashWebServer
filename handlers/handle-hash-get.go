@@ -1,4 +1,4 @@
-package webserver
+package handlers
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 )
 
 type HashGetHandler struct {
-	datastore datastore.DataStore
+	Ds datastore.DataStore
 }
 
 func (handler HashGetHandler) HandleHashGet(resp http.ResponseWriter, req *http.Request) {
@@ -27,7 +27,7 @@ func (handler HashGetHandler) HandleHashGet(resp http.ResponseWriter, req *http.
 	} else {
 		var hashValue string
 		var err error
-		if hashValue, err = handler.datastore.GetHash(hashId); err != nil {
+		if hashValue, err = handler.Ds.GetHash(hashId); err != nil {
 			fmt.Fprint(resp, "404 hash not defined for ", hashId)
 		} else {
 			log.Printf("{ \"id\":%d, \"hash\":\"%s\"\n", hashId, hashValue)
