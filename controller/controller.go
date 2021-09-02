@@ -32,6 +32,7 @@ func NewController(
 	if ds == nil {
 		controller.ds = hashdatastore.NewMemoryDataStore()
 	}
+
 	if srv == nil {
 		scheduler := services.NewHashJobScheduler(controller.ds)
 		controller.server = server.NewServer(controller.ds, scheduler, controller.shutdownChannel, controller.errorChannel)
@@ -47,6 +48,7 @@ func (controller *Controller) Run() error {
 	// Wait for shutdown condition
 	err := controller.waitForShutdown()
 
+	// Signal all in WaitGroup to finish work and return
 	controller.gracefulShutdown()
 
 	// Return any error

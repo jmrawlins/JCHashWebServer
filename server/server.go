@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/jmrawlins/JCHashWebServer/datastore/hashdatastore"
+	"github.com/jmrawlins/JCHashWebServer/router"
 
 	"github.com/jmrawlins/JCHashWebServer/handlers"
 	"github.com/jmrawlins/JCHashWebServer/services"
@@ -30,13 +31,17 @@ func NewServer(ds hashdatastore.HashDataStore, scheduler services.HashJobSchedul
 }
 
 func (srv *Server) initRoutes(shutdownChannel chan<- bool) {
+	routes := make(map[string]http.Handler)
+
 	hashGetHandler := handlers.HashGetHandler{Ds: srv.ds}
 	hashCreateHandler := handlers.HashCreateHandler{Ds: srv.ds, Scheduler: srv.scheduler}
 	shutdownHandler := handlers.ShutdownHandler{ShutdownChannel: shutdownChannel}
 	statsHandler := handlers.StatsHandler{}
 
-	http.Handle("/", hashGetHandler)
-	http.Handle("/hash", hashCreateHandler)
-	http.Handle("/shutdown", shutdownHandler)
-	http.Handle("/stats", statsHandler)
+	routes["/"] = hashGetHandler
+	routes["/hash"] = hashCreateHandler
+	routes["/shutdown"] = shutdownHandler
+	routes["/stats"] = statsHandler
+
+	router.InitRoutes(routes)
 }
