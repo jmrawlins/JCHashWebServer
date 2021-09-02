@@ -1,8 +1,8 @@
-package datastore
+package hashdatastore
 
 import "github.com/jmrawlins/JCHashWebServer/hash"
 
-type DataStore interface {
+type HashDataStore interface {
 	GetNextId() (id hash.HashId, err error)
 	StoreHash(id hash.HashId, hash string) error
 	GetHash(id hash.HashId) (string, error)

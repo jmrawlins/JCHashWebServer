@@ -6,15 +6,15 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/jmrawlins/JCHashWebServer/datastore/hashdatastore"
 	"github.com/jmrawlins/JCHashWebServer/hash"
-	"github.com/jmrawlins/JCHashWebServer/hash/datastore"
 )
 
 type HashGetHandler struct {
-	Ds datastore.DataStore
+	Ds hashdatastore.HashDataStore
 }
 
-func (handler HashGetHandler) HandleHashGet(resp http.ResponseWriter, req *http.Request) {
+func (handler HashGetHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	// Get the id from the uri
 	strUri := strings.TrimLeft(req.URL.Path, "/")
 	log.Println("Received request at:", strUri)

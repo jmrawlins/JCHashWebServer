@@ -4,6 +4,9 @@ import (
 	"net/http"
 )
 
-func HandleStats(resp http.ResponseWriter, req *http.Request) {
+type StatsHandler struct {
+}
+
+func (handler StatsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	resp.Write([]byte("Stats!\n"))
 }

@@ -3,7 +3,7 @@ package controller
 import (
 	"log"
 
-	"github.com/jmrawlins/JCHashWebServer/hash/datastore"
+	"github.com/jmrawlins/JCHashWebServer/datastore/hashdatastore"
 	"github.com/jmrawlins/JCHashWebServer/server"
 	"github.com/jmrawlins/JCHashWebServer/services"
 )
@@ -11,14 +11,14 @@ import (
 type Controller struct {
 	shutdownChannel chan bool
 	errorChannel    chan error
-	ds              datastore.DataStore
+	ds              hashdatastore.HashDataStore
 	server          *server.Server
 }
 
 func NewController(
 	shutdownChannel chan bool,
 	errorChannel chan error,
-	ds datastore.DataStore,
+	ds hashdatastore.HashDataStore,
 	srv *server.Server,
 ) Controller {
 	controller := Controller{shutdownChannel, errorChannel, ds, srv}
@@ -30,7 +30,7 @@ func NewController(
 		controller.errorChannel = make(chan error)
 	}
 	if ds == nil {
-		controller.ds = datastore.NewMemoryDataStore()
+		controller.ds = hashdatastore.NewMemoryDataStore()
 	}
 	if srv == nil {
 		scheduler := services.NewHashJobScheduler(controller.ds)

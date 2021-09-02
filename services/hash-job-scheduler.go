@@ -1,15 +1,15 @@
 package services
 
 import (
+	"github.com/jmrawlins/JCHashWebServer/datastore/hashdatastore"
 	"github.com/jmrawlins/JCHashWebServer/hash"
-	"github.com/jmrawlins/JCHashWebServer/hash/datastore"
 )
 
 type HashJobScheduler struct {
-	ds datastore.DataStore
+	ds hashdatastore.HashDataStore
 }
 
-func NewHashJobScheduler(ds datastore.DataStore) HashJobScheduler {
+func NewHashJobScheduler(ds hashdatastore.HashDataStore) HashJobScheduler {
 	return HashJobScheduler{ds}
 }
 
