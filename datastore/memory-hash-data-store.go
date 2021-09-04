@@ -11,6 +11,11 @@ import (
 	"time"
 )
 
+/*
+MemoryHashDataStore provides an in-memory implementation of the data store interface.
+As such instead of performing io it owns the resources directly
+and uses its own mutexes to lock down synchronized operations.
+*/
 type MemoryHashDataStore struct {
 	nextId     uint64
 	hashes     map[uint64]string
@@ -20,7 +25,7 @@ type MemoryHashDataStore struct {
 	statsLock  *sync.Mutex
 }
 
-func NewMemoryDataStore() *MemoryHashDataStore {
+func NewMemoryHashDataStore() *MemoryHashDataStore {
 	ds := MemoryHashDataStore{}
 	ds.idLock = &sync.Mutex{}
 	ds.hashesLock = &sync.Mutex{}
@@ -38,7 +43,12 @@ func (ds *MemoryHashDataStore) GetNextId() (uint64, error) {
 }
 
 func (ds *MemoryHashDataStore) StoreHash(id uint64, password string) error {
+	// Here's our lazy implementation of the 5 seconds before hashing requirement,
+	// since the In-Memory data store is mostly for POC anyway.
+	// I left this in the data store because this is the side of the interface we own.
+	// Other solutions might use
 	time.Sleep((5 * time.Second))
+
 	hash := sha512.Sum512([]byte(password))
 	hashB64Str := base64.StdEncoding.EncodeToString(hash[:])
 	ds.hashesLock.Lock()

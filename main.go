@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -11,11 +12,12 @@ import (
 )
 
 func main() {
-	// Parse arguments -- only have 1, it's a port number
+	// Parse arguments
 	args := os.Args[1:]
 	if len(args) != 1 {
 		usage()
 	}
+
 	port, err := strconv.ParseUint(args[0], 10, 16)
 	if err != nil {
 		usage()
@@ -26,11 +28,12 @@ func main() {
 	ds := datastore.NewMemoryDataStore()
 	wg := &sync.WaitGroup{}
 	server := server.NewServer(wg, ds, ds, shutdownCalled, errorChannel, uint16(port))
-	if err := server.Run(); err != nil {
+	if err := server.RunGraceful(); err != nil {
 		log.Fatalf("%s\n", err)
 	}
 }
 
 func usage() {
-	log.Fatalln("Usage:", os.Args[0], "<port>")
+	fmt.Println("Usage:", os.Args[0], "<port>")
+	os.Exit(1)
 }

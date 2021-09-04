@@ -29,9 +29,9 @@ func NewServer(
 	errorChannel chan error,
 	port uint16,
 ) *Server {
-
 	srv := &Server{wg: wg, hds: hds, sds: sds, err: errorChannel, shutdownCalled: shutdownCalled, port: port}
 	srv.initRoutes(shutdownCalled)
+
 	return srv
 }
 
@@ -54,10 +54,7 @@ func (srv *Server) initRoutes(shutdownChannel chan<- struct{}) {
 	}
 }
 
-func InitRoutes(sds datastore.StatsDataStore, routes map[string]http.Handler) {
-}
-
-// Listen and serve at the requested address, overriding the default serve mux
+// Listen and serve at the requested address, optionally overriding the default serve mux
 func (srv *Server) ListenAndServe(addr string, handler http.Handler) error {
 	srv.hs.Addr = addr
 	srv.hs.Handler = handler
@@ -72,7 +69,7 @@ func (srv *Server) Shutdown() {
 }
 
 // Runs the server with graceful shutdown
-func (srv *Server) Run() error {
+func (srv *Server) RunGraceful() error {
 	defer srv.wg.Wait()
 
 	srv.wg.Add(1)
