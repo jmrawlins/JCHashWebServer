@@ -75,14 +75,7 @@ func (ds *MemoryHashDataStore) StoreRequestTime(ms int64) {
 	ds.statsLock.Lock()
 	defer ds.statsLock.Unlock()
 
-	// running average with window, so we never overflow float64: (count * oldAvg) + newTime / (count+1)
-	maxCountWindow := uint64(1000)
-	count := ds.stats.Total
-	if ds.stats.Total > maxCountWindow {
-		count = maxCountWindow
-	}
-
-	ds.stats.Average = (float32(count)*ds.stats.Average + float32(ms)) / float32(count+1)
+	ds.stats.Average = (float64(ds.stats.Total)*ds.stats.Average + float64(ms)) / float64(ds.stats.Total+1)
 	ds.stats.Total += 1
 	json.NewEncoder(os.Stdout).Encode(ds.stats)
 }

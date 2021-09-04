@@ -2,7 +2,7 @@ package datastore
 
 type Stats struct {
 	Total   uint64  `json:"total"`
-	Average float32 `json:"average"`
+	Average float64 `json:"average"`
 }
 
 type StatsDataStore interface {
