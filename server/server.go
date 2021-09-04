@@ -1,47 +1,58 @@
 package server
 
 import (
+	"context"
 	"net/http"
+	"sync"
 
-	"github.com/jmrawlins/JCHashWebServer/datastore/hashdatastore"
+	"github.com/jmrawlins/JCHashWebServer/datastore"
 	"github.com/jmrawlins/JCHashWebServer/router"
 
 	"github.com/jmrawlins/JCHashWebServer/handlers"
-	"github.com/jmrawlins/JCHashWebServer/services"
 )
 
 type Server struct {
-	ds           hashdatastore.HashDataStore
-	scheduler    services.HashJobScheduler
+	hs           http.Server
+	hds          datastore.HashDataStore
+	sds          datastore.StatsDataStore
 	errorChannel chan<- error
+	wg           *sync.WaitGroup
 }
 
 func (srv *Server) ListenAndServe(addr string, handler http.Handler) error {
-	err := http.ListenAndServe(":8080", nil)
-	if err != nil {
-		srv.errorChannel <- err
-	}
+	srv.hs.Addr = addr
+	err := srv.hs.ListenAndServe()
 	return err
 }
 
-func NewServer(ds hashdatastore.HashDataStore, scheduler services.HashJobScheduler, shutdownChannel chan<- bool, errorChannel chan<- error) *Server {
-	srv := &Server{ds, scheduler, errorChannel}
-	srv.initRoutes(shutdownChannel)
+func (srv *Server) Shutdown() {
+	srv.hs.Shutdown(context.Background())
+}
+
+func NewServer(
+	wg *sync.WaitGroup,
+	ds datastore.HashDataStore,
+	sds datastore.StatsDataStore,
+	shutdownCalled chan<- struct{},
+	errorChannel chan<- error) *Server {
+
+	srv := &Server{wg: wg, hds: ds, sds: sds, errorChannel: errorChannel}
+	srv.initRoutes(shutdownCalled)
 	return srv
 }
 
-func (srv *Server) initRoutes(shutdownChannel chan<- bool) {
+func (srv *Server) initRoutes(shutdownChannel chan<- struct{}) {
 	routes := make(map[string]http.Handler)
 
-	hashGetHandler := handlers.HashGetHandler{Ds: srv.ds}
-	hashCreateHandler := handlers.HashCreateHandler{Ds: srv.ds, Scheduler: srv.scheduler}
+	hashGetHandler := handlers.HashGetHandler{Ds: srv.hds}
+	hashCreateHandler := handlers.HashCreateHandler{Wg: srv.wg, Ds: srv.hds}
 	shutdownHandler := handlers.ShutdownHandler{ShutdownChannel: shutdownChannel}
-	statsHandler := handlers.StatsHandler{}
+	statsHandler := handlers.StatsHandler{Ds: srv.sds}
 
 	routes["/"] = hashGetHandler
 	routes["/hash"] = hashCreateHandler
 	routes["/shutdown"] = shutdownHandler
 	routes["/stats"] = statsHandler
 
-	router.InitRoutes(routes)
+	router.InitRoutes(srv.sds, routes)
 }

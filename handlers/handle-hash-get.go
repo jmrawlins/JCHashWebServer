@@ -6,15 +6,20 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/jmrawlins/JCHashWebServer/datastore/hashdatastore"
+	"github.com/jmrawlins/JCHashWebServer/datastore"
 	"github.com/jmrawlins/JCHashWebServer/hash"
 )
 
 type HashGetHandler struct {
-	Ds hashdatastore.HashDataStore
+	Ds datastore.HashDataStore
 }
 
 func (handler HashGetHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		http.Error(resp, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	// Get the id from the uri
 	strUri := strings.TrimLeft(req.URL.Path, "/")
 	log.Println("Received request at:", strUri)

@@ -1,4 +1,4 @@
-package hashdatastore
+package datastore
 
 import "github.com/jmrawlins/JCHashWebServer/hash"
 

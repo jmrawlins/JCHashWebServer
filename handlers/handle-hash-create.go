@@ -3,24 +3,36 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"sync"
 
-	"github.com/jmrawlins/JCHashWebServer/datastore/hashdatastore"
+	"github.com/jmrawlins/JCHashWebServer/datastore"
 	"github.com/jmrawlins/JCHashWebServer/hash"
-	"github.com/jmrawlins/JCHashWebServer/services"
 )
 
 type HashCreateHandler struct {
-	Ds        hashdatastore.HashDataStore
-	Scheduler services.HashJobScheduler
+	Ds datastore.HashDataStore
+	Wg *sync.WaitGroup
 }
 
 func (handler HashCreateHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	id, _ := handler.Ds.GetNextId() // TODO handle error
-	handler.Scheduler.Schedule(hash.HashCreateRequest{Id: id, Password: req.FormValue("password")})
+	if req.Method != http.MethodPost {
+		http.Error(resp, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	id, err := handler.Ds.GetNextId()
+	if err != nil {
+		http.Error(resp, "error creating hash:"+err.Error(), http.StatusServiceUnavailable)
+	}
+	scheduleHashJob(handler.Wg, handler.Ds, hash.HashCreateRequest{Id: id, Password: req.FormValue("password")})
 
 	fmt.Fprintf(resp, "%v", id)
 }
 
-func (handler HashCreateHandler) serveHTTP(resp http.ResponseWriter, req *http.Request) {
-
+func scheduleHashJob(wg *sync.WaitGroup, ds datastore.HashDataStore, req hash.HashCreateRequest) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ds.StoreHash(req.Id, req.Password)
+	}()
 }

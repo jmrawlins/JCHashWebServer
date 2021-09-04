@@ -1,71 +1,53 @@
 package controller
 
 import (
+	"fmt"
 	"log"
+	"net/http"
+	"sync"
 
-	"github.com/jmrawlins/JCHashWebServer/datastore/hashdatastore"
+	"github.com/jmrawlins/JCHashWebServer/datastore"
 	"github.com/jmrawlins/JCHashWebServer/server"
-	"github.com/jmrawlins/JCHashWebServer/services"
 )
 
 type Controller struct {
-	shutdownChannel chan bool
+	wg              *sync.WaitGroup
+	shutdownChannel chan struct{}
 	errorChannel    chan error
-	ds              hashdatastore.HashDataStore
+	hds             datastore.HashDataStore
+	sds             datastore.StatsDataStore
 	server          *server.Server
+	port            uint16
 }
 
 func NewController(
-	shutdownChannel chan bool,
+	wg *sync.WaitGroup,
+	shutdownCalled chan struct{},
 	errorChannel chan error,
-	ds hashdatastore.HashDataStore,
+	hds datastore.HashDataStore,
+	sds datastore.StatsDataStore,
 	srv *server.Server,
+	port uint16,
 ) Controller {
-	controller := Controller{shutdownChannel, errorChannel, ds, srv}
 
-	if shutdownChannel == nil {
-		controller.shutdownChannel = make(chan bool)
-	}
-	if errorChannel == nil {
-		controller.errorChannel = make(chan error)
-	}
-	if ds == nil {
-		controller.ds = hashdatastore.NewMemoryDataStore()
-	}
-
-	if srv == nil {
-		scheduler := services.NewHashJobScheduler(controller.ds)
-		controller.server = server.NewServer(controller.ds, scheduler, controller.shutdownChannel, controller.errorChannel)
+	return Controller{
+		wg:              wg,
+		shutdownChannel: shutdownCalled,
+		errorChannel:    errorChannel,
+		hds:             hds,
+		sds:             sds,
+		server:          srv,
+		port:            port,
 	}
 
-	return controller
 }
 
-func (controller *Controller) Run() error {
-	// Run the web server
-	go controller.server.ListenAndServe(":8080", nil)
-
-	// Wait for shutdown condition
-	err := controller.waitForShutdown()
-
-	// Signal all in WaitGroup to finish work and return
-	controller.gracefulShutdown()
-
-	// Return any error
-	return err
-}
-
-func (controller *Controller) waitForShutdown() error {
+func (controller *Controller) waitForShutdownCommand() error {
 	for {
 		select {
-		case isShutdownTime := <-controller.shutdownChannel:
-			if isShutdownTime {
-				log.Println("Time to shut down!")
-				log.Println("=============")
-				log.Println(controller.ds.GetAllHashes())
-				log.Println("=============")
-				return nil
-			}
+		case <-controller.shutdownChannel:
+			log.Println("Time to shut down!")
+			return nil
 		case err := <-controller.errorChannel:
 			log.Println(err.Error())
 			return err
@@ -73,7 +55,39 @@ func (controller *Controller) waitForShutdown() error {
 	}
 }
 
-func (controller *Controller) gracefulShutdown() {
-	// Wait for jobs to complete
+func (controller *Controller) gracefulShutdown(wg *sync.WaitGroup) {
+	// Signal server to stop servicing requests and shut down
+	controller.server.Shutdown()
 
+	// Wait for jobs to complete
+	log.Println("Waiting for jobs to stop:", wg)
+	wg.Wait()
+	log.Println("=============")
+	log.Println(controller.hds.GetAllHashes())
+	log.Println("=============")
+
+	log.Println("Graceful Shutdown Complete")
+}
+
+func (controller *Controller) Run() error {
+	defer controller.wg.Wait()
+
+	controller.wg.Add(1)
+	// Run the web server
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		addr := fmt.Sprint(":", controller.port)
+		if err := controller.server.ListenAndServe(addr, nil); err != http.ErrServerClosed {
+			log.Fatalln("ListenAndServer error:", err)
+		}
+	}(controller.wg)
+
+	// Wait for shutdown condition
+	err := controller.waitForShutdownCommand()
+
+	// Signal all in WaitGroup to finish work and return
+	controller.gracefulShutdown(controller.wg)
+
+	// Return any error
+	return err
 }
