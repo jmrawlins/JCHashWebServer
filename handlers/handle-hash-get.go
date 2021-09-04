@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/jmrawlins/JCHashWebServer/datastore"
-	"github.com/jmrawlins/JCHashWebServer/hash"
 )
 
 type HashGetHandler struct {
@@ -27,7 +27,7 @@ func (handler HashGetHandler) ServeHTTP(resp http.ResponseWriter, req *http.Requ
 	// Get endpoint as an int, if possible
 	if len(strUri) == 0 {
 		fmt.Fprintf(resp, "Up and running...")
-	} else if hashId, err := hash.HashIdFromString(strUri); err != nil {
+	} else if hashId, err := strconv.ParseUint(strUri, 10, 64); err != nil {
 		log.Println("404")
 	} else {
 		var hashValue string

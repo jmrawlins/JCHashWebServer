@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/jmrawlins/JCHashWebServer/datastore"
-	"github.com/jmrawlins/JCHashWebServer/hash"
 )
 
 type HashCreateHandler struct {
@@ -29,7 +28,7 @@ func (handler HashCreateHandler) ServeHTTP(resp http.ResponseWriter, req *http.R
 	fmt.Fprintf(resp, "%v", id)
 }
 
-func scheduleHashJob(wg *sync.WaitGroup, ds datastore.HashDataStore, id hash.HashId, password string) {
+func scheduleHashJob(wg *sync.WaitGroup, ds datastore.HashDataStore, id uint64, password string) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()

@@ -1,10 +1,8 @@
 package datastore
 
-import "github.com/jmrawlins/JCHashWebServer/hash"
-
 type HashDataStore interface {
-	GetNextId() (id hash.HashId, err error)
-	StoreHash(id hash.HashId, hash string) error
-	GetHash(id hash.HashId) (string, error)
-	GetAllHashes() *map[hash.HashId]string
+	GetNextId() (id uint64, err error)
+	StoreHash(id uint64, hash string) error
+	GetHash(id uint64) (string, error)
+	GetAllHashes() *map[uint64]string
 }
