@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/jmrawlins/JCHashWebServer/controller"
 	"github.com/jmrawlins/JCHashWebServer/datastore"
 	"github.com/jmrawlins/JCHashWebServer/server"
 )
@@ -26,9 +25,8 @@ func main() {
 	errorChannel := make(chan error)
 	ds := datastore.NewMemoryDataStore()
 	wg := &sync.WaitGroup{}
-	server := server.NewServer(wg, ds, ds, shutdownCalled, errorChannel)
-	controller := controller.NewController(wg, shutdownCalled, errorChannel, ds, ds, server, uint16(port))
-	if err := controller.Run(); err != nil {
+	server := server.NewServer(wg, ds, ds, shutdownCalled, errorChannel, uint16(port))
+	if err := server.Run(); err != nil {
 		log.Fatalf("%s\n", err)
 	}
 }
