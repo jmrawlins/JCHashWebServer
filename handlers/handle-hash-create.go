@@ -24,15 +24,15 @@ func (handler HashCreateHandler) ServeHTTP(resp http.ResponseWriter, req *http.R
 	if err != nil {
 		http.Error(resp, "error creating hash:"+err.Error(), http.StatusServiceUnavailable)
 	}
-	scheduleHashJob(handler.Wg, handler.Ds, hash.HashCreateRequest{Id: id, Password: req.FormValue("password")})
+	scheduleHashJob(handler.Wg, handler.Ds, id, req.FormValue("password"))
 
 	fmt.Fprintf(resp, "%v", id)
 }
 
-func scheduleHashJob(wg *sync.WaitGroup, ds datastore.HashDataStore, req hash.HashCreateRequest) {
+func scheduleHashJob(wg *sync.WaitGroup, ds datastore.HashDataStore, id hash.HashId, password string) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		ds.StoreHash(req.Id, req.Password)
+		ds.StoreHash(id, password)
 	}()
 }
