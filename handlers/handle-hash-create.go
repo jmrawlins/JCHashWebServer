@@ -3,6 +3,7 @@ package handlers
 import (
 	"crypto/sha512"
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -29,6 +30,9 @@ func (handler HashCreateHandler) ServeHTTP(resp http.ResponseWriter, req *http.R
 	if err != nil {
 		http.Error(resp, "error creating hash:"+err.Error(), http.StatusServiceUnavailable)
 	}
+
+	fmt.Fprint(resp, id)
+
 	scheduleHashJob(handler.wg, handler.ds, id, req.FormValue("password"))
 }
 
