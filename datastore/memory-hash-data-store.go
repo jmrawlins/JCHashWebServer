@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
-	"time"
 )
 
 /*
@@ -42,8 +41,6 @@ func (ds *MemoryHashDataStore) GetNextId() (uint64, error) {
 }
 
 func (ds *MemoryHashDataStore) StoreHash(id uint64, password string) error {
-	time.Sleep((5 * time.Second))
-
 	hash := sha512.Sum512([]byte(password))
 	hashB64Str := base64.StdEncoding.EncodeToString(hash[:])
 	ds.hashesLock.Lock()

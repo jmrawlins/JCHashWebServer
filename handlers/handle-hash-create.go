@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/jmrawlins/JCHashWebServer/datastore"
 )
@@ -28,14 +28,13 @@ func (handler HashCreateHandler) ServeHTTP(resp http.ResponseWriter, req *http.R
 		http.Error(resp, "error creating hash:"+err.Error(), http.StatusServiceUnavailable)
 	}
 	scheduleHashJob(handler.wg, handler.ds, id, req.FormValue("password"))
-
-	fmt.Fprintf(resp, "%v", id)
 }
 
 func scheduleHashJob(wg *sync.WaitGroup, ds datastore.HashDataStore, id uint64, password string) {
 	wg.Add(1)
-	go func() {
+	time.AfterFunc(5*time.Second, func() {
 		defer wg.Done()
 		ds.StoreHash(id, password)
-	}()
+	})
+
 }
