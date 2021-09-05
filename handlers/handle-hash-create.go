@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"crypto/sha512"
+	"encoding/base64"
 	"net/http"
 	"sync"
 	"time"
@@ -34,7 +36,9 @@ func scheduleHashJob(wg *sync.WaitGroup, ds datastore.HashDataStore, id uint64, 
 	wg.Add(1)
 	time.AfterFunc(5*time.Second, func() {
 		defer wg.Done()
-		ds.StoreHash(id, password)
+		hash := sha512.Sum512([]byte(password))
+		hashB64Str := base64.StdEncoding.EncodeToString(hash[:])
+		ds.StoreHash(id, hashB64Str)
 	})
 
 }

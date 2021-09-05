@@ -1,8 +1,6 @@
 package datastore
 
 import (
-	"crypto/sha512"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -40,15 +38,13 @@ func (ds *MemoryHashDataStore) GetNextId() (uint64, error) {
 	return ds.nextId, nil
 }
 
-func (ds *MemoryHashDataStore) StoreHash(id uint64, password string) error {
-	hash := sha512.Sum512([]byte(password))
-	hashB64Str := base64.StdEncoding.EncodeToString(hash[:])
+func (ds *MemoryHashDataStore) StoreHash(id uint64, hash string) error {
 	ds.hashesLock.Lock()
 	defer ds.hashesLock.Unlock()
 	if _, ok := ds.hashes[id]; ok {
 		return fmt.Errorf("setting an already set id (%d)! That should never happen!", id)
 	}
-	ds.hashes[id] = hashB64Str
+	ds.hashes[id] = hash
 	return nil
 }
 
