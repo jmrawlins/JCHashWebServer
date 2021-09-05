@@ -11,7 +11,11 @@ import (
 )
 
 type HashGetHandler struct {
-	Ds datastore.HashDataStore
+	ds datastore.HashDataStore
+}
+
+func NewHashGetHandler(ds datastore.HashDataStore) *HashGetHandler {
+	return &HashGetHandler{ds}
 }
 
 func (handler HashGetHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
@@ -32,7 +36,7 @@ func (handler HashGetHandler) ServeHTTP(resp http.ResponseWriter, req *http.Requ
 	} else {
 		var hashValue string
 		var err error
-		if hashValue, err = handler.Ds.GetHash(hashId); err != nil {
+		if hashValue, err = handler.ds.GetHash(hashId); err != nil {
 			fmt.Fprint(resp, "404 hash not defined for ", hashId)
 		} else {
 			log.Printf("{ \"id\":%d, \"hash\":\"%s\"\n", hashId, hashValue)

@@ -6,9 +6,12 @@ import (
 )
 
 type ShutdownHandler struct {
-	ShutdownChannel chan<- struct{}
+	shutdown chan<- struct{}
 }
 
+func NewShutdownHandler(shutdown chan<- struct{}) *ShutdownHandler {
+	return &ShutdownHandler{shutdown}
+}
 func (handler ShutdownHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(resp, "Method not allowed", http.StatusMethodNotAllowed)
@@ -16,5 +19,5 @@ func (handler ShutdownHandler) ServeHTTP(resp http.ResponseWriter, req *http.Req
 	}
 
 	io.WriteString(resp, "Shutdown!\n")
-	handler.ShutdownChannel <- struct{}{}
+	handler.shutdown <- struct{}{}
 }

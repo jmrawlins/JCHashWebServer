@@ -9,8 +9,12 @@ import (
 )
 
 type HashCreateHandler struct {
-	Ds datastore.HashDataStore
-	Wg *sync.WaitGroup
+	ds datastore.HashDataStore
+	wg *sync.WaitGroup
+}
+
+func NewHashCreateHandler(ds datastore.HashDataStore, wg *sync.WaitGroup) *HashCreateHandler {
+	return &HashCreateHandler{ds, wg}
 }
 
 func (handler HashCreateHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
@@ -19,11 +23,11 @@ func (handler HashCreateHandler) ServeHTTP(resp http.ResponseWriter, req *http.R
 		return
 	}
 
-	id, err := handler.Ds.GetNextId()
+	id, err := handler.ds.GetNextId()
 	if err != nil {
 		http.Error(resp, "error creating hash:"+err.Error(), http.StatusServiceUnavailable)
 	}
-	scheduleHashJob(handler.Wg, handler.Ds, id, req.FormValue("password"))
+	scheduleHashJob(handler.wg, handler.ds, id, req.FormValue("password"))
 
 	fmt.Fprintf(resp, "%v", id)
 }

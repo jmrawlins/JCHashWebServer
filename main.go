@@ -25,7 +25,7 @@ func main() {
 
 	shutdownCalled := make(chan struct{})
 	errorChannel := make(chan error)
-	ds := datastore.NewMemoryDataStore()
+	ds := datastore.NewMemoryHashDataStore()
 	wg := &sync.WaitGroup{}
 	server := server.NewServer(wg, ds, ds, shutdownCalled, errorChannel, uint16(port))
 	if err := server.RunGraceful(); err != nil {

@@ -8,7 +8,11 @@ import (
 )
 
 type StatsHandler struct {
-	Ds datastore.StatsDataStore
+	ds datastore.StatsDataStore
+}
+
+func NewStatsHandler(ds datastore.StatsDataStore) *StatsHandler {
+	return &StatsHandler{ds}
 }
 
 func (handler StatsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
@@ -17,7 +21,18 @@ func (handler StatsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	if err := json.NewEncoder(resp).Encode(handler.Ds.GetStats()); err != nil {
-		http.Error(resp, "Unable to retrieve stats: "+err.Error(), http.StatusServiceUnavailable)
+	errorString := "Unable to retrieve stats: "
+	if req.URL.RawQuery == "" {
+		if err := json.NewEncoder(resp).Encode(handler.ds.GetUriStats("/hash")); err != nil {
+			http.Error(resp, errorString+err.Error(), http.StatusServiceUnavailable)
+		}
+	} else {
+		stats, err := handler.ds.GetStats()
+		if err != nil {
+			http.Error(resp, errorString+err.Error(), http.StatusServiceUnavailable)
+		}
+		if err := json.NewEncoder(resp).Encode(stats); err != nil {
+			http.Error(resp, errorString+err.Error(), http.StatusInternalServerError)
+		}
 	}
 }

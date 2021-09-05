@@ -38,10 +38,10 @@ func NewServer(
 func (srv *Server) initRoutes(shutdownChannel chan<- struct{}) {
 	routes := make(map[string]http.Handler)
 
-	hashGetHandler := handlers.HashGetHandler{Ds: srv.hds}
-	hashCreateHandler := handlers.HashCreateHandler{Wg: srv.wg, Ds: srv.hds}
-	shutdownHandler := handlers.ShutdownHandler{ShutdownChannel: shutdownChannel}
-	statsHandler := handlers.StatsHandler{Ds: srv.sds}
+	hashGetHandler := handlers.NewHashGetHandler(srv.hds)
+	hashCreateHandler := handlers.NewHashCreateHandler(srv.hds, srv.wg)
+	shutdownHandler := handlers.NewShutdownHandler(shutdownChannel)
+	statsHandler := handlers.NewStatsHandler(srv.sds)
 
 	routes["/"] = hashGetHandler
 	routes["/hash"] = hashCreateHandler
@@ -49,7 +49,7 @@ func (srv *Server) initRoutes(shutdownChannel chan<- struct{}) {
 	routes["/stats"] = statsHandler
 
 	for routeSpec, handler := range routes {
-		superHandler := handlers.SuperHandler{ActualHandler: handler, Sds: srv.sds}
+		superHandler := handlers.NewSuperHandler(handler, srv.sds)
 		http.Handle(routeSpec, superHandler)
 	}
 }

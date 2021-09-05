@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"sync"
 	"time"
 )
@@ -19,7 +18,7 @@ and uses its own mutexes to lock down synchronized operations.
 type MemoryHashDataStore struct {
 	nextId     uint64
 	hashes     map[uint64]string
-	stats      Stats
+	stats      ServerStats
 	idLock     *sync.Mutex
 	hashesLock *sync.Mutex
 	statsLock  *sync.Mutex
@@ -31,6 +30,7 @@ func NewMemoryHashDataStore() *MemoryHashDataStore {
 	ds.hashesLock = &sync.Mutex{}
 	ds.statsLock = &sync.Mutex{}
 	ds.hashes = make(map[uint64]string)
+	ds.stats = make(ServerStats)
 	return &ds
 }
 
@@ -43,10 +43,6 @@ func (ds *MemoryHashDataStore) GetNextId() (uint64, error) {
 }
 
 func (ds *MemoryHashDataStore) StoreHash(id uint64, password string) error {
-	// Here's our lazy implementation of the 5 seconds before hashing requirement,
-	// since the In-Memory data store is mostly for POC anyway.
-	// I left this in the data store because this is the side of the interface we own.
-	// Other solutions might use
 	time.Sleep((5 * time.Second))
 
 	hash := sha512.Sum512([]byte(password))
@@ -79,15 +75,34 @@ func (ds *MemoryHashDataStore) GetAllHashes() *map[uint64]string {
 	return &ds.hashes
 }
 
-func (ds *MemoryHashDataStore) StoreRequestTime(ms int64) {
+func (ds *MemoryHashDataStore) StoreRequestTime(uri string, ms int64) {
 	ds.statsLock.Lock()
 	defer ds.statsLock.Unlock()
 
-	ds.stats.Average = (float64(ds.stats.Total)*ds.stats.Average + float64(ms)) / float64(ds.stats.Total+1)
-	ds.stats.Total += 1
-	json.NewEncoder(os.Stdout).Encode(ds.stats)
+	reqStat, ok := ds.stats[uri]
+	if !ok {
+		ds.stats[uri] = &RequestStats{URI: uri, Total: 1, Average: float64(ms)}
+	} else {
+		reqStat.Average = (float64(reqStat.Total)*reqStat.Average + float64(ms)) / float64(reqStat.Total+1)
+		reqStat.Total += 1
+		ds.stats[uri] = reqStat
+	}
 }
 
-func (ds *MemoryHashDataStore) GetStats() Stats {
-	return ds.stats
+func (ds *MemoryHashDataStore) GetStats() (string, error) {
+	ds.statsLock.Lock()
+	defer ds.statsLock.Unlock()
+	stats, err := json.Marshal(ds.stats)
+	return string(stats), err
+}
+
+func (ds *MemoryHashDataStore) GetUriStats(uri string) RequestStats {
+	ds.statsLock.Lock()
+	defer ds.statsLock.Unlock()
+	_, ok := ds.stats[uri]
+	if !ok {
+		ds.stats[uri] = &RequestStats{URI: uri, Total: 0, Average: 0}
+	}
+
+	return *ds.stats[uri]
 }
