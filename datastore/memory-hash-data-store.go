@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 )
@@ -50,7 +49,7 @@ func (ds *MemoryHashDataStore) StoreHash(id uint64, password string) error {
 	ds.hashesLock.Lock()
 	defer ds.hashesLock.Unlock()
 	if _, ok := ds.hashes[id]; ok {
-		log.Fatalln("Setting an already set id! That should never happen!")
+		return fmt.Errorf("setting an already set id (%d)! That should never happen!", id)
 	}
 	ds.hashes[id] = hashB64Str
 	return nil
