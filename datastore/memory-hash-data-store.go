@@ -12,12 +12,13 @@ As such instead of performing io it owns the resources directly
 and uses its own mutexes to lock down synchronized operations.
 */
 type MemoryHashDataStore struct {
-	nextId     uint64
-	hashes     map[uint64]string
-	stats      ServerStats
-	idLock     *sync.Mutex
-	hashesLock *sync.Mutex
-	statsLock  *sync.Mutex
+	nextId       uint64
+	hashes       map[uint64]string
+	stats        ServerStats
+	idLock       *sync.Mutex
+	hashesLock   *sync.Mutex
+	statsLock    *sync.Mutex
+	nextIdCalled bool
 }
 
 func NewMemoryHashDataStore() *MemoryHashDataStore {
@@ -31,6 +32,9 @@ func NewMemoryHashDataStore() *MemoryHashDataStore {
 }
 
 func (ds *MemoryHashDataStore) GetNextId() (uint64, error) {
+	// No more manually setting the Id
+	ds.nextIdCalled = true
+
 	ds.idLock.Lock()
 	defer ds.idLock.Unlock()
 	ds.nextId += 1
@@ -38,11 +42,22 @@ func (ds *MemoryHashDataStore) GetNextId() (uint64, error) {
 	return ds.nextId, nil
 }
 
+func (ds *MemoryHashDataStore) SetLastId(id uint64) error {
+	if ds.nextIdCalled {
+		return fmt.Errorf("setLastId called after already assigning ids. Ignoring.")
+	}
+	ds.idLock.Lock()
+	defer ds.idLock.Unlock()
+
+	ds.nextId = id
+	return nil
+}
+
 func (ds *MemoryHashDataStore) StoreHash(id uint64, hash string) error {
 	ds.hashesLock.Lock()
 	defer ds.hashesLock.Unlock()
 	if _, ok := ds.hashes[id]; ok {
-		return fmt.Errorf("setting an already set id (%d)! That should never happen!", id)
+		return fmt.Errorf("WARN: Not allowed to overwrite an existing hash (%d)", id)
 	}
 	ds.hashes[id] = hash
 	return nil
@@ -61,10 +76,10 @@ func (ds *MemoryHashDataStore) GetHash(id uint64) (string, error) {
 	return value, nil
 }
 
-func (ds *MemoryHashDataStore) GetAllHashes() *map[uint64]string {
+func (ds *MemoryHashDataStore) GetAllHashes() map[uint64]string {
 	ds.idLock.Lock()
 	defer ds.idLock.Unlock()
-	return &ds.hashes
+	return ds.hashes
 }
 
 func (ds *MemoryHashDataStore) StoreRequestTime(uri string, ms int64) {
