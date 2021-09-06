@@ -1,7 +1,6 @@
 package datastore
 
 import (
-	"encoding/json"
 	"fmt"
 	"sync"
 )
@@ -10,6 +9,8 @@ import (
 MemoryHashDataStore provides an in-memory implementation of the data store interface.
 As such instead of performing io it owns the resources directly
 and uses its own mutexes to lock down synchronized operations.
+
+It is expected to be instantiated by NewMemoryHashDataStore
 */
 type MemoryHashDataStore struct {
 	nextId       uint64
@@ -88,7 +89,7 @@ func (ds *MemoryHashDataStore) StoreRequestTime(uri string, ms int64) error {
 
 	reqStat, ok := ds.stats[uri]
 	if !ok {
-		ds.stats[uri] = &RequestStats{URI: uri, Total: 1, Average: float64(ms)}
+		ds.stats[uri] = RequestStats{URI: uri, Total: 1, Average: float64(ms)}
 	} else {
 		reqStat.Average = (float64(reqStat.Total)*reqStat.Average + float64(ms)) / float64(reqStat.Total+1)
 		reqStat.Total += 1
@@ -98,11 +99,11 @@ func (ds *MemoryHashDataStore) StoreRequestTime(uri string, ms int64) error {
 	return nil
 }
 
-func (ds *MemoryHashDataStore) GetStats() (string, error) {
+func (ds *MemoryHashDataStore) GetStats() (ServerStats, error) {
 	ds.statsLock.Lock()
 	defer ds.statsLock.Unlock()
-	stats, err := json.Marshal(ds.stats)
-	return string(stats), err
+
+	return ds.stats, nil
 }
 
 func (ds *MemoryHashDataStore) GetUriStats(uri string) (RequestStats, error) {
@@ -114,5 +115,5 @@ func (ds *MemoryHashDataStore) GetUriStats(uri string) (RequestStats, error) {
 		return RequestStats{URI: uri, Total: 0, Average: 0}, nil
 	}
 
-	return *ds.stats[uri], nil
+	return ds.stats[uri], nil
 }

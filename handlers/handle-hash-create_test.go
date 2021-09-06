@@ -66,13 +66,13 @@ func TestHashCreateHandler(t *testing.T) {
 			handler.ServeHTTP(rr, req)
 
 			if status := rr.Code; status != http.StatusOK {
-				t.Errorf("handler returned wrong status code: got '%v' expected %v",
+				t.Errorf("handler returned wrong status code: got '%v' expected '%v'",
 					status, http.StatusOK)
 			}
 
 			expected := "42"
 			if rr.Body.String() != expected {
-				t.Errorf("handler returned unexpected body: got '%v' expected %v",
+				t.Errorf("handler returned unexpected body: got '%v' expected '%v'",
 					rr.Body.String(), expected)
 			}
 		})
@@ -89,13 +89,13 @@ func TestHashCreateHandler(t *testing.T) {
 			time.Sleep(6 * time.Second)
 
 			if ds.StoreHash_id != 42 {
-				t.Errorf("Unexpected id argument to StoreHash: got '%v' expected %v", ds.StoreHash_id, 42)
+				t.Errorf("Unexpected id argument to StoreHash: got '%v' expected '%v'", ds.StoreHash_id, 42)
 				t.Fail()
 			}
 
 			expHash := "ZEHhWB65gUlzdVwtDQArEyx+KVLzp/aTaRaPlBzYRIFj6vjFdqEb0Q5B8zVKCZ0vKbZPZklJz0Fd7su2A+gf7Q=="
 			if ds.StoreHash_hash != expHash {
-				t.Errorf("Unexpected hash argument to StoreHash: got '%v' expected %v", ds.StoreHash_hash, expHash)
+				t.Errorf("Unexpected hash argument to StoreHash: got '%v' expected '%v'", ds.StoreHash_hash, expHash)
 				t.Fail()
 			}
 		})

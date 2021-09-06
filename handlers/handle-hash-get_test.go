@@ -32,13 +32,13 @@ func TestHashGetHandler(t *testing.T) {
 
 		t.Run("Returns the expected response", func(t *testing.T) {
 			if status := rr.Code; status != int(http.StatusOK) {
-				t.Errorf("handler returned wrong status code: got '%v' expected %v",
+				t.Errorf("handler returned wrong status code: got '%v' expected '%v'",
 					status, http.StatusOK)
 			}
 
 			expected := "ZEHhWB65gUlzdVwtDQArEyx+KVLzp/aTaRaPlBzYRIFj6vjFdqEb0Q5B8zVKCZ0vKbZPZklJz0Fd7su2A+gf7Q=="
 			if rr.Body.String() != expected {
-				t.Errorf("handler returned unexpected body: got '%v' expected %v",
+				t.Errorf("handler returned unexpected body: got '%v' expected '%v'",
 					rr.Body.String(), expected)
 			}
 
@@ -76,7 +76,7 @@ func TestHashGetHandler(t *testing.T) {
 		t.Run("Returns the expected response", func(t *testing.T) {
 			expected := http.StatusNotFound
 			if status := rr.Code; status != expected {
-				t.Errorf("handler returned wrong status code: got '%v' expected %v",
+				t.Errorf("handler returned wrong status code: got '%v' expected '%v'",
 					status, expected)
 			}
 		})

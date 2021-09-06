@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"sync"
 	"testing"
@@ -215,6 +216,31 @@ func TestMemoryHashDataStore(t *testing.T) {
 	t.Run("GetStats", func(t *testing.T) {
 		t.Parallel()
 
+		t.Run("Returns valid response when no request times have been stored yet", func(t *testing.T) {
+			t.Parallel()
+			ds := NewMemoryHashDataStore()
+
+			if stat, err := ds.GetStats(); err != nil || len(stat) != 0 {
+				t.Fail()
+			}
+		})
+
+		t.Run("Returns correct response requested times have been stored", func(t *testing.T) {
+			t.Parallel()
+			ds := NewMemoryHashDataStore()
+			ds.StoreRequestTime("foo", 1234)
+			ds.StoreRequestTime("bar", 1337)
+
+			expected := make(ServerStats)
+			expected["foo"] = RequestStats{URI: "foo", Average: 1234, Total: 1}
+			expected["bar"] = RequestStats{URI: "bar", Average: 1337, Total: 1}
+
+			if stat, err := ds.GetStats(); err != nil || !reflect.DeepEqual(stat, expected) {
+				t.Errorf("stats map does not match expected: got '%v' expected '%v'", stat, expected)
+				t.Fail()
+			}
+		})
+
 	})
 
 	t.Run("GetUriStats", func(t *testing.T) {
@@ -225,6 +251,15 @@ func TestMemoryHashDataStore(t *testing.T) {
 			ds := NewMemoryHashDataStore()
 
 			if stat, err := ds.GetUriStats("foo"); err != nil || stat.Average != 0 || stat.URI != "foo" || stat.Total != 0 {
+				t.Fail()
+			}
+		})
+
+		t.Run("Returns correct response when the requested uri has been accessed", func(t *testing.T) {
+			t.Parallel()
+			ds := NewMemoryHashDataStore()
+			ds.StoreRequestTime("foo", 1234)
+			if stat, err := ds.GetUriStats("foo"); err != nil || stat.Average != 1234 || stat.URI != "foo" || stat.Total != 1 {
 				t.Fail()
 			}
 		})

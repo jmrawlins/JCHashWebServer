@@ -111,12 +111,7 @@ func (srv *Server) gracefulShutdown(wg *sync.WaitGroup) {
 	// Signal server to stop servicing requests and shut down
 	srv.Shutdown()
 
-	// Wait for jobs to complete
 	log.Println("Waiting for jobs to stop:", wg)
 	wg.Wait()
-	log.Println("=============")
-	log.Println(srv.hds.GetAllHashes())
-	log.Println("=============")
-
 	log.Println("Graceful Shutdown Complete")
 }

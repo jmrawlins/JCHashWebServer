@@ -6,18 +6,18 @@ type RequestStats struct {
 	Average float64 `json:"average"`
 }
 
-type ServerStats map[string]*RequestStats
+type ServerStats map[string]RequestStats
 
 type StatsDataStore interface {
 	StoreRequestTime(uri string, ms int64) error
-	GetStats() (string, error)
+	GetStats() (ServerStats, error)
 	GetUriStats(uri string) (RequestStats, error)
 }
 
 type StatsDataStoreMock struct {
 	StoreRequestTimeResult error
 	GetStatsResult         struct {
-		S string
+		S ServerStats
 		E error
 	}
 	GetUriStatsResults struct {
@@ -36,7 +36,7 @@ func (m *StatsDataStoreMock) StoreRequestTime(uri string, ms int64) error {
 	m.StoreRequestTime_ms = ms
 	return m.StoreRequestTimeResult
 }
-func (m *StatsDataStoreMock) GetStats() (string, error) {
+func (m *StatsDataStoreMock) GetStats() (ServerStats, error) {
 	return m.GetStatsResult.S, m.GetStatsResult.E
 }
 func (m *StatsDataStoreMock) GetUriStats(uri string) (RequestStats, error) {
