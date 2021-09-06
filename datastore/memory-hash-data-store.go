@@ -105,7 +105,11 @@ func (ds *MemoryHashDataStore) GetStats() (ServerStats, error) {
 	ds.statsLock.Lock()
 	defer ds.statsLock.Unlock()
 
-	return ds.stats, nil
+	stats := make(ServerStats)
+	for key, val := range ds.stats {
+		stats[key] = val
+	}
+	return stats, nil
 }
 
 func (ds *MemoryHashDataStore) GetUriStats(uri string) (RequestStats, error) {
