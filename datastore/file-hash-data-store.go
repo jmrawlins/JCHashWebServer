@@ -49,8 +49,8 @@ func NewFileHashDataStore(r io.Reader, w io.Writer, mds *MemoryHashDataStore) (*
 		}
 	}
 
-	// Finally, initialize the MemoryDataStore's next id assigned, since we loaded data from outside
-	if err := ds.mds.SetLastId(lastId + 1); err != nil {
+	// Finally, initialize the MemoryDataStore's last id assigned, since we loaded data from outside
+	if err := ds.mds.SetLastId(lastId); err != nil {
 		return nil, fmt.Errorf("failed to set last id in MemoryDataStore: %s", err.Error())
 	}
 
