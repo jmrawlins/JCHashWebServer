@@ -8,7 +8,7 @@ Build into working directory using `go build`
 Build into $GOPATH/bin using `go install`
 
 ## Testing
-Unit test using `go test`
+Unit test using `make test`
 
 ## Running
 `./JCHashWebServer` for usage

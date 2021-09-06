@@ -16,4 +16,4 @@ dev-shutdown-stops-fielding-requests:
 
 ## Section: Automated Tests
 unit:
-	go test
+	go test -race $$(go list)/datastore $$(go list)/handlers
