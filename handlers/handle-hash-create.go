@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -33,6 +34,11 @@ func (handler HashCreateHandler) ServeHTTP(resp http.ResponseWriter, req *http.R
 
 	fmt.Fprint(resp, id)
 
+	if strings.HasPrefix(req.Header.Get("Content-Type"), "multipart/form-data") {
+		req.ParseMultipartForm(2048)
+	} else if strings.HasPrefix(req.Header.Get("Content-Type"), "application/x-www-form-urlencoded") {
+		req.ParseForm()
+	}
 	scheduleHashJob(handler.wg, handler.ds, id, req.FormValue("password"))
 }
 

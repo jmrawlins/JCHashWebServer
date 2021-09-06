@@ -26,13 +26,13 @@ func main() {
 
 	// Open or create hashes file
 	filename := args[1]
-	file, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0664)
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0664)
 	if err != nil {
 		log.Fatalf("Error creating/opening hashes file (%s) for rw: %s", filename, err.Error())
 	}
 	mds := datastore.NewMemoryHashDataStore()
 
-	fds, err := datastore.NewFileHashDataStore(file, mds)
+	fds, err := datastore.NewFileHashDataStore(file, file, mds)
 	if err != nil {
 		log.Fatalf("problem initializing file data store: %s", err.Error())
 	}

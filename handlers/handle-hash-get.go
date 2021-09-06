@@ -32,12 +32,15 @@ func (handler HashGetHandler) ServeHTTP(resp http.ResponseWriter, req *http.Requ
 	if len(strUri) == 0 {
 		fmt.Fprintf(resp, "Welcome to JCHashWebServer! Consider trying our other endpoints:\n/hash\n/#\n/stats\n/stats?all\n/shutdown")
 	} else if hashId, err := strconv.ParseUint(strUri, 10, 64); err != nil {
+		http.Error(resp, "Not found", http.StatusNotFound)
 		log.Println("404")
 	} else {
 		var hashValue string
 		var err error
 		if hashValue, err = handler.ds.GetHash(hashId); err != nil {
-			fmt.Fprintf(resp, "404 hash not defined for %d", hashId)
+			errMsg := fmt.Sprint("Hash not defined for ", hashId)
+			http.Error(resp, errMsg, http.StatusNotFound)
+			fmt.Fprintf(resp, errMsg, hashId)
 		} else {
 			fmt.Fprint(resp, hashValue)
 		}

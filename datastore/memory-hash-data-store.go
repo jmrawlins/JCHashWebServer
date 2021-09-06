@@ -82,7 +82,7 @@ func (ds *MemoryHashDataStore) GetAllHashes() map[uint64]string {
 	return ds.hashes
 }
 
-func (ds *MemoryHashDataStore) StoreRequestTime(uri string, ms int64) {
+func (ds *MemoryHashDataStore) StoreRequestTime(uri string, ms int64) error {
 	ds.statsLock.Lock()
 	defer ds.statsLock.Unlock()
 
@@ -94,6 +94,8 @@ func (ds *MemoryHashDataStore) StoreRequestTime(uri string, ms int64) {
 		reqStat.Total += 1
 		ds.stats[uri] = reqStat
 	}
+
+	return nil
 }
 
 func (ds *MemoryHashDataStore) GetStats() (string, error) {
@@ -103,13 +105,14 @@ func (ds *MemoryHashDataStore) GetStats() (string, error) {
 	return string(stats), err
 }
 
-func (ds *MemoryHashDataStore) GetUriStats(uri string) RequestStats {
+func (ds *MemoryHashDataStore) GetUriStats(uri string) (RequestStats, error) {
 	ds.statsLock.Lock()
 	defer ds.statsLock.Unlock()
 	_, ok := ds.stats[uri]
 	if !ok {
-		ds.stats[uri] = &RequestStats{URI: uri, Total: 0, Average: 0}
+		// Return a zero entry for the address that has no requests
+		return RequestStats{URI: uri, Total: 0, Average: 0}, nil
 	}
 
-	return *ds.stats[uri]
+	return *ds.stats[uri], nil
 }

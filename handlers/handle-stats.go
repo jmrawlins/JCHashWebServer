@@ -23,15 +23,24 @@ func (handler StatsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Reques
 
 	errorString := "Unable to retrieve stats: "
 	if req.URL.RawQuery == "" {
-		if err := json.NewEncoder(resp).Encode(handler.ds.GetUriStats("/hash")); err != nil {
+		stats, err := handler.ds.GetUriStats("/hash")
+		if err != nil {
 			http.Error(resp, errorString+err.Error(), http.StatusServiceUnavailable)
+		}
+		encoder := json.NewEncoder(resp)
+		encoder.SetEscapeHTML(false)
+		if err := encoder.Encode(stats); err != nil {
+			http.Error(resp, errorString+err.Error(), http.StatusInternalServerError)
 		}
 	} else {
 		stats, err := handler.ds.GetStats()
 		if err != nil {
 			http.Error(resp, errorString+err.Error(), http.StatusServiceUnavailable)
 		}
-		if err := json.NewEncoder(resp).Encode(stats); err != nil {
+		encoder := json.NewEncoder(resp)
+		encoder.SetEscapeHTML(false)
+
+		if err := encoder.Encode(stats); err != nil {
 			http.Error(resp, errorString+err.Error(), http.StatusInternalServerError)
 		}
 	}

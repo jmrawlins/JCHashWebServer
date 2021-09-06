@@ -18,16 +18,17 @@ import (
 // The file is expected to be a tab-separated value file with two unnamed columns: id, and hash value.
 // Invalid lines will be logged and skipped:
 type FileHashDataStore struct {
-	mds     *MemoryHashDataStore
-	rws     io.ReadWriteSeeker
-	rwsLock *sync.Mutex
+	mds    *MemoryHashDataStore
+	r      io.Reader
+	w      io.Writer
+	rwLock *sync.Mutex
 }
 
-func NewFileHashDataStore(rws io.ReadWriteSeeker, mds *MemoryHashDataStore) (*FileHashDataStore, error) {
-	ds := FileHashDataStore{mds, rws, &sync.Mutex{}}
+func NewFileHashDataStore(r io.Reader, w io.Writer, mds *MemoryHashDataStore) (*FileHashDataStore, error) {
+	ds := FileHashDataStore{mds, r, w, &sync.Mutex{}}
 
 	// Read if there is content
-	scanner := bufio.NewScanner(rws)
+	scanner := bufio.NewScanner(r)
 	lastId := uint64(0)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -73,15 +74,10 @@ func (ds *FileHashDataStore) StoreHash(id uint64, hash string) error {
 }
 
 func (ds *FileHashDataStore) storeHash(line string) error {
-	ds.rwsLock.Lock()
-	defer ds.rwsLock.Unlock()
+	ds.rwLock.Lock()
+	defer ds.rwLock.Unlock()
 
-	// Seek to end of file (in case this is our first time writing)
-	if _, err := ds.rws.Seek(0, 2); err != nil {
-		return fmt.Errorf("ERROR: Cannot seek end of hashes file: %s. (%s) will not be persisted.", err.Error(), line)
-	}
-
-	if _, err := fmt.Fprintf(ds.rws, line); err != nil {
+	if _, err := fmt.Fprintf(ds.w, line); err != nil {
 		return fmt.Errorf("ERROR: Cannot write to hashes file: %s. (%s) will not be persisted", err.Error(), line)
 	}
 	return nil
