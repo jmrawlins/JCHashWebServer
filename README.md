@@ -13,6 +13,32 @@ Unit test using `make test`
 ## Running
 `./JCHashWebServer` for usage
 
+## Endpoints
+The server has the following endpoints:
+
+- /hash
+  - Request: POST using form data
+  - Returns: hash retrieval id. Hashes can be retrieved using the `/<hash_id>` endpoint
+  - Creates a hash job to hash the requested string in 5 seconds.
+  - ex: curl --data "password=angryMonkey" http://localhost:8080/hash
+
+- /<hash_id>
+  - Request: GET
+  - Returns: the hashed password associated with the requested hash_id
+
+- /stats
+  - Request: GET
+  - Returns: request handling statistics for the /hash endpoint in json format
+
+- /stats?all
+  - Request: GET
+  - Returns: request handling statistics for all endpoints since the server started, in json format
+
+- /shutdown
+  - Request: POST
+  - Action: Signals the server to shut down gracefully
+  - Returns: just 200 response code
+
 ## Assumptions
 - Production-ready requirements:
 My personal requirements for this minimum viable product were:
