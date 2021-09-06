@@ -4,9 +4,7 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
-	"log"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 
@@ -28,29 +26,20 @@ func (handler HashCreateHandler) ServeHTTP(resp http.ResponseWriter, req *http.R
 		return
 	}
 
+	pass := req.FormValue("password")
+	if len(pass) == 0 {
+		http.Error(resp, "Invalid password: cannot be empty", http.StatusBadRequest)
+		return
+	}
+
 	id, err := handler.ds.GetNextId()
 	if err != nil {
 		http.Error(resp, "error creating hash:"+err.Error(), http.StatusServiceUnavailable)
-	}
-
-	if strings.HasPrefix(req.Header.Get("Content-Type"), "multipart/form-data") {
-		if err := req.ParseMultipartForm(2048); err != nil {
-			errMsg := fmt.Sprint("Error parsing multipart form data: ", err.Error())
-			log.Println(errMsg)
-			http.Error(resp, errMsg, http.StatusBadRequest)
-			return
-		}
-	} else if strings.HasPrefix(req.Header.Get("Content-Type"), "application/x-www-form-urlencoded") {
-		if err := req.ParseForm(); err != nil {
-			errMsg := fmt.Sprint("Error urlencoded form data:", err)
-			log.Println(errMsg)
-			http.Error(resp, errMsg, http.StatusBadRequest)
-			return
-		}
+		return
 	}
 
 	fmt.Fprint(resp, id)
-	scheduleHashJob(handler.wg, handler.ds, id, req.FormValue("password"))
+	scheduleHashJob(handler.wg, handler.ds, id, pass)
 }
 
 func scheduleHashJob(wg *sync.WaitGroup, ds datastore.HashDataStore, id uint64, password string) {
