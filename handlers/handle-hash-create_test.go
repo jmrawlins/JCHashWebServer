@@ -28,7 +28,7 @@ func TestHashCreateHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	reqMultipartForm.Header.Set("Content-Type", "multipart/form-data")
+	reqMultipartForm.Header.Set("Content-Type", writer.FormDataContentType())
 
 	// Set up a form-encoded data POST
 	data := url.Values{}
@@ -61,7 +61,6 @@ func TestHashCreateHandler(t *testing.T) {
 	for _, request := range reqs {
 
 		t.Run("Returns the expected response", func(t *testing.T) {
-			t.Parallel()
 			_, handler, rr, req := setupTest(request)
 			handler.ServeHTTP(rr, req)
 
@@ -78,7 +77,6 @@ func TestHashCreateHandler(t *testing.T) {
 		})
 
 		t.Run("Calls the datastore with the expected arguments", func(t *testing.T) {
-			t.Parallel()
 			ds, handler, rr, req := setupTest(request)
 			handler.ServeHTTP(rr, req)
 
@@ -88,6 +86,8 @@ func TestHashCreateHandler(t *testing.T) {
 			// so it shouldn't bite us.
 			time.Sleep(6 * time.Second)
 
+			ds.Lock.Lock()
+			defer ds.Lock.Unlock()
 			if ds.StoreHash_id != 42 {
 				t.Errorf("Unexpected id argument to StoreHash: got '%v' expected '%v'", ds.StoreHash_id, 42)
 				t.Fail()

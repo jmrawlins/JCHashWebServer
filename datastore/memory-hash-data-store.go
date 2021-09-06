@@ -33,22 +33,24 @@ func NewMemoryHashDataStore() *MemoryHashDataStore {
 }
 
 func (ds *MemoryHashDataStore) GetNextId() (uint64, error) {
-	// No more manually setting the Id
-	ds.nextIdCalled = true
-
 	ds.idLock.Lock()
 	defer ds.idLock.Unlock()
+
+	// No more manually setting the next id
+	ds.nextIdCalled = true
+
 	ds.nextId += 1
 
 	return ds.nextId, nil
 }
 
 func (ds *MemoryHashDataStore) SetLastId(id uint64) error {
+	ds.idLock.Lock()
+	defer ds.idLock.Unlock()
+
 	if ds.nextIdCalled {
 		return fmt.Errorf("setLastId called after already assigning ids. Ignoring.")
 	}
-	ds.idLock.Lock()
-	defer ds.idLock.Unlock()
 
 	ds.nextId = id
 	return nil
