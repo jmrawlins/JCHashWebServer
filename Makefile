@@ -9,9 +9,11 @@ dev-race-test:
 	ab -l -v 2 -n 4000 -c 30 -m GET http://localhost:8080/stats\?all 2>&1 > /tmp/statsAllReport.log &
 
 dev-shutdown-stops-fielding-requests:
-	curl —data “password=angryMonkey” http://localhost:8080/hash # Starts a job
+	curl --location --request POST '127.0.0.1:8080/hash' --form 'password="angryMonkey"' # Starts a job
 	curl -X POST http://localhost:8080/shutdown
 	curl http://localhost:8080/1 #Should be connection refused
+
+
 
 
 ## Section: Automated Tests
