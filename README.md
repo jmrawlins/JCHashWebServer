@@ -13,7 +13,7 @@ Unit test using `make test`
 ## Running
 `./JCHashWebServer` for usage
 
-## Assumptions & Notes
+## Assumptions
 - Production-ready requirements:
 My personal requirements for this minimum viable product were:
 - Unit tests for packages
@@ -21,8 +21,14 @@ My personal requirements for this minimum viable product were:
 - System tests for the program as a whole
   - They exercise all regular use cases while also stress-testing it a bit
 - Logging
-  - Very strong on errors, but presently light on INFO level logging.
+  - Very strong on errors, but optional at INFO level initially.
+- Persistence
+  - A production ready server would have a persistent data store, so I did implement that.
 
+This program is currently meant to run on unix/linux systems only - the filesystem io and makefile
+are not meant for windows file systems.
+
+# Notes
 - Not scale-ready:
 For now I've assumed this is meant to run as a single instance on a single server.
 In order to scale it up, I would want to use a centralized data storage (e.g., a database).
