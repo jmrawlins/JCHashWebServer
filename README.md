@@ -36,7 +36,8 @@ handle a decent amount of traffic and would (did) find race conditions if (when)
 - No peer review:
 Since this was my first Go program I wanted terribly to get it peer reviewed by a more
 experienced Go developer, but I didn't in the spirit of this being a personal evaluation.
-I would never write this much code professionally without having other eyes on it!
+I would never write this much code professionally without having other eyes on it! I still
+fear that my C++ roots show in this project and I need more practice thinking in Go.
 
 ## Improvements
 In future iterations I would:
