@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/jmrawlins/JCHashWebServer/datastore"
+	"github.com/jmrawlins/JCHashWebServer/http"
 )
 
 func main() {
@@ -39,7 +40,7 @@ func main() {
 	shutdownCalled := make(chan struct{})
 	errorChannel := make(chan error)
 	wg := &sync.WaitGroup{}
-	server := NewServer(wg, fds, mds, shutdownCalled, errorChannel, uint16(port))
+	server := http.NewServer(wg, fds, mds, shutdownCalled, errorChannel, uint16(port))
 	if err := server.RunGraceful(); err != nil {
 		log.Fatalf("%s\n", err)
 	}

@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/jmrawlins/JCHashWebServer/datastore"
@@ -18,6 +20,8 @@ func NewSuperHandler(handler http.Handler, sds datastore.StatsDataStore) *SuperH
 func (sh SuperHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	// Pre-processing (start timer)
 	startTime := time.Now().UnixMilli()
+	strUri := strings.TrimLeft(req.URL.Path, "/")
+	log.Println("Received request at:", strUri)
 
 	// Call the real handler
 	sh.handler.ServeHTTP(resp, req)
