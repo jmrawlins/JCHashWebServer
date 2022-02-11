@@ -40,7 +40,7 @@ func main() {
 	shutdownCalled := make(chan struct{})
 	errorChannel := make(chan error)
 	wg := &sync.WaitGroup{}
-	server := http.NewServer(wg, fds, mds, shutdownCalled, errorChannel, uint16(port))
+	server := http.NewServer(wg, fds, mds, shutdownCalled, errorChannel, uint16(port), http.UnaryInterceptor(UnaryServerInterceptor()))
 	if err := server.RunGraceful(); err != nil {
 		log.Fatalf("%s\n", err)
 	}

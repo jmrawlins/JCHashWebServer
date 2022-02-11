@@ -36,30 +36,10 @@ type HttpServer struct {
 }
 
 type serverOptions struct {
-	// creds                 credentials.TransportCredentials
-	// codec                 baseCodec
-	// cp                    Compressor
-	// dc                    Decompressor
 	unaryInt        UnaryServerInterceptor
 	streamInt       StreamServerInterceptor
 	chainUnaryInts  []UnaryServerInterceptor
 	chainStreamInts []StreamServerInterceptor
-	// inTapHandle           tap.ServerInHandle
-	// statsHandler          stats.Handler
-	// maxConcurrentStreams  uint32
-	// maxReceiveMessageSize int
-	// maxSendMessageSize    int
-	// unknownStreamDesc     *StreamDesc
-	// keepaliveParams       keepalive.ServerParameters
-	// keepalivePolicy       keepalive.EnforcementPolicy
-	// initialWindowSize     int32
-	// initialConnWindowSize int32
-	// writeBufferSize       int
-	// readBufferSize        int
-	// connectionTimeout     time.Duration
-	// maxHeaderListSize     *uint32
-	// headerTableSize       *uint32
-	// numServerWorkers      uint32
 }
 
 var defaultServerOptions = serverOptions{
