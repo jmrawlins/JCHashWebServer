@@ -121,7 +121,8 @@ func (srv *Server) initRoutes(shutdownChannel chan<- struct{}) {
 
 	for routeSpec, handler := range routes {
 		// TODO Use interceptor instead of SuperHandler
-		superHandler := handlers.NewSuperHandler(handler, srv.sds)
+
+		superHandler := NewSuperHandler(handler, srv.sds, srv.opts.unaryInt)
 		http.Handle(routeSpec, superHandler)
 	}
 }

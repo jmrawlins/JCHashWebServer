@@ -1,6 +1,9 @@
 package http
 
-import "context"
+import (
+	"context"
+	"net/http"
+)
 
 // chainUnaryServerInterceptors chains all unary server interceptors into one.
 func chainUnaryServerInterceptors(s *Server) {
@@ -17,8 +20,8 @@ func chainUnaryServerInterceptors(s *Server) {
 	} else if len(interceptors) == 1 {
 		chainedInt = interceptors[0]
 	} else {
-		chainedInt = func(ctx context.Context, req interface{}, info *UnaryServerInfo, handler UnaryHandler) (interface{}, error) {
-			return interceptors[0](ctx, req, info, getChainUnaryHandler(interceptors, 0, info, handler))
+		chainedInt = func(ctx context.Context, resp http.ResponseWriter, req *http.Request, info *UnaryServerInfo, handler UnaryHandler) {
+			interceptors[0](ctx, resp, req, info, getChainUnaryHandler(interceptors, 0, info, handler))
 		}
 	}
 
@@ -31,8 +34,8 @@ func getChainUnaryHandler(interceptors []UnaryServerInterceptor, curr int, info 
 		return finalHandler
 	}
 
-	return func(ctx context.Context, req interface{}) (interface{}, error) {
-		return interceptors[curr+1](ctx, req, info, getChainUnaryHandler(interceptors, curr+1, info, finalHandler))
+	return func(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+		interceptors[curr+1](ctx, resp, req, info, getChainUnaryHandler(interceptors, curr+1, info, finalHandler))
 	}
 }
 

@@ -3,17 +3,18 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"reflect"
 
-	"github.com/jmrawlins/JCHashWebServer/http"
+	jchttp "github.com/jmrawlins/JCHashWebServer/http"
 )
 
 // UnaryClientInterceptor is called on every request from a client to a unary
 // server operation, here, we grab the operating system of the client and add it
 // to the metadata within the context of the request so that it can be received
 // by the server
-func UnaryClientInterceptor() http.UnaryClientInterceptor {
-	return func(ctx context.Context, method string, req, reply interface{}, cc *http.ClientConn, invoker http.UnaryInvoker, opts ...http.CallOption) error {
+func UnaryClientInterceptor() jchttp.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply interface{}, cc *jchttp.ClientConn, invoker jchttp.UnaryInvoker, opts ...jchttp.CallOption) error {
 		// Get the operating system the client is running on
 		// cos := runtime.GOOS
 
@@ -33,7 +34,7 @@ func UnaryClientInterceptor() http.UnaryClientInterceptor {
 // Embedded EdgeServerStream to allow us to access the RecvMsg function on
 // intercept
 type EdgeServerStream struct {
-	http.ServerStream
+	jchttp.ServerStream
 }
 
 // RecvMsg receives messages from a stream
@@ -48,8 +49,8 @@ func (e *EdgeServerStream) RecvMsg(m interface{}) error {
 }
 
 // Set up a wrapper to allow us to access the RecvMsg function
-func StreamServerInterceptor() http.StreamServerInterceptor {
-	return func(srv interface{}, ss http.ServerStream, info *http.StreamServerInfo, handler http.StreamHandler) error {
+func StreamServerInterceptor() jchttp.StreamServerInterceptor {
+	return func(srv interface{}, ss jchttp.ServerStream, info *jchttp.StreamServerInfo, handler jchttp.StreamHandler) error {
 		wrapper := &EdgeServerStream{
 			ServerStream: ss,
 		}
@@ -58,8 +59,8 @@ func StreamServerInterceptor() http.StreamServerInterceptor {
 }
 
 // StreamClientInterceptor allows us to log on each client stream opening
-func StreamClientInterceptor() http.StreamClientInterceptor {
-	return func(ctx context.Context, desc *http.StreamDesc, cc *http.ClientConn, method string, streamer http.Streamer, opts ...http.CallOption) (http.ClientStream, error) {
+func StreamClientInterceptor() jchttp.StreamClientInterceptor {
+	return func(ctx context.Context, desc *jchttp.StreamDesc, cc *jchttp.ClientConn, method string, streamer jchttp.Streamer, opts ...jchttp.CallOption) (jchttp.ClientStream, error) {
 		log.Printf("opening client streaming to the server method: %v", method)
 
 		return streamer(ctx, desc, cc, method)
@@ -71,8 +72,8 @@ func StreamClientInterceptor() http.StreamClientInterceptor {
 // the metadata, and inspect the context to receive the IP address that the
 // request was received from. We then modify the EdgeLocation type to include
 // this information for every request
-func UnaryServerInterceptor() http.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *http.UnaryServerInfo, handler http.UnaryHandler) (interface{}, error) {
+func UnaryServerInterceptor() jchttp.UnaryServerInterceptor {
+	return func(ctx context.Context, resp http.ResponseWriter, req *http.Request, info *jchttp.UnaryServerInfo, handler jchttp.UnaryHandler) {
 		// Get the metadata from the incoming context
 		// md, ok := metadata.FromIncomingContext(ctx)
 		// if !ok {
@@ -90,10 +91,8 @@ func UnaryServerInterceptor() http.UnaryServerInterceptor {
 		// Populate the EdgeLocation type with the IP and OS
 		// req.(*api.EdgeLocation).IpAddress = ip
 		// req.(*api.EdgeLocation).OperatingSystem = os[0]
-		log.Printf("Calling through to handler")
-		h, err := handler(ctx, req)
-		// log.Printf("server interceptor hit: hydrating type with OS: '%v' and IP: '%v'", os[0], ip)
-
-		return h, err
+		log.Printf("IN INTERCEPTOR: Calling through to handler")
+		handler(ctx, resp, req)
+		log.Printf("IN INTERCEPTOR: Handler returned")
 	}
 }
