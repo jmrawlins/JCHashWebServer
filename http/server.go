@@ -11,18 +11,6 @@ import (
 	"github.com/jmrawlins/JCHashWebServer/handlers"
 )
 
-// Server is a gRPC server to serve RPC requests.
-type HttpServer struct {
-	opts serverOptions
-
-	mu sync.Mutex // guards following
-
-	quit    chan struct{}
-	done    chan struct{}
-	serveWG sync.WaitGroup // counts active Serve goroutines for GracefulStop
-
-}
-
 type Server struct {
 	opts           serverOptions
 	hs             http.Server
