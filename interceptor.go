@@ -4,68 +4,9 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"reflect"
 
 	jchttp "github.com/jmrawlins/JCHashWebServer/http"
 )
-
-// UnaryClientInterceptor is called on every request from a client to a unary
-// server operation, here, we grab the operating system of the client and add it
-// to the metadata within the context of the request so that it can be received
-// by the server
-func UnaryClientInterceptor() jchttp.UnaryClientInterceptor {
-	return func(ctx context.Context, method string, req, reply interface{}, cc *jchttp.ClientConn, invoker jchttp.UnaryInvoker, opts ...jchttp.CallOption) error {
-		// Get the operating system the client is running on
-		// cos := runtime.GOOS
-
-		// Append the OS info to the outgoing request
-		// ctx = metadata.AppendToOutgoingContext(ctx, "client-os", cos)
-		log.Printf("client interceptor doing upstream stuff, then calling through to invoker")
-
-		// Invoke the original method call
-		err := invoker(ctx, method, req, reply, cc, opts...)
-
-		log.Printf("client interceptor doing downstream stuff")
-
-		return err
-	}
-}
-
-// Embedded EdgeServerStream to allow us to access the RecvMsg function on
-// intercept
-type EdgeServerStream struct {
-	jchttp.ServerStream
-}
-
-// RecvMsg receives messages from a stream
-func (e *EdgeServerStream) RecvMsg(m interface{}) error {
-	// Here we can perform additional logic on the received message, such as
-	// validation
-	log.Printf("intercepted server stream message, type: %s", reflect.TypeOf(m).String())
-	if err := e.ServerStream.RecvMsg(m); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Set up a wrapper to allow us to access the RecvMsg function
-func StreamServerInterceptor() jchttp.StreamServerInterceptor {
-	return func(srv interface{}, ss jchttp.ServerStream, info *jchttp.StreamServerInfo, handler jchttp.StreamHandler) error {
-		wrapper := &EdgeServerStream{
-			ServerStream: ss,
-		}
-		return handler(srv, wrapper)
-	}
-}
-
-// StreamClientInterceptor allows us to log on each client stream opening
-func StreamClientInterceptor() jchttp.StreamClientInterceptor {
-	return func(ctx context.Context, desc *jchttp.StreamDesc, cc *jchttp.ClientConn, method string, streamer jchttp.Streamer, opts ...jchttp.CallOption) (jchttp.ClientStream, error) {
-		log.Printf("opening client streaming to the server method: %v", method)
-
-		return streamer(ctx, desc, cc, method)
-	}
-}
 
 // UnaryServerInterceptor is called on every request received from a client to a
 // unary server operation, here, we pull out the client operating system from

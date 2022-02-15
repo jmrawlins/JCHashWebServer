@@ -16,59 +16,11 @@ type HttpServer struct {
 	opts serverOptions
 
 	mu sync.Mutex // guards following
-	// lis      map[net.Listener]bool
-	// conns    map[transport.ServerTransport]bool
-	// serve    bool
-	// drain    bool
-	// cv       *sync.Cond              // signaled when connections close for GracefulStop
-	// services map[string]*serviceInfo // service name -> service info
-	// events   trace.EventLog
 
-	quit chan struct{}
-	done chan struct{}
-	// channelzRemoveOnce sync.Once
+	quit    chan struct{}
+	done    chan struct{}
 	serveWG sync.WaitGroup // counts active Serve goroutines for GracefulStop
 
-	// channelzID int64 // channelz unique identification number
-	// czData     *channelzData
-
-	// serverWorkerChannels []chan *serverWorkerData
-}
-
-type serverOptions struct {
-	unaryInt        UnaryServerInterceptor
-	streamInt       StreamServerInterceptor
-	chainUnaryInts  []UnaryServerInterceptor
-	chainStreamInts []StreamServerInterceptor
-}
-
-var defaultServerOptions = serverOptions{
-	// maxReceiveMessageSize: defaultServerMaxReceiveMessageSize,
-	// maxSendMessageSize:    defaultServerMaxSendMessageSize,
-	// connectionTimeout:     120 * time.Second,
-	// writeBufferSize:       defaultWriteBufSize,
-	// readBufferSize:        defaultReadBufSize,
-}
-
-// A ServerOption sets options such as credentials, codec and keepalive parameters, etc.
-type ServerOption interface {
-	apply(*serverOptions)
-}
-
-func newFuncServerOption(f func(*serverOptions)) *funcServerOption {
-	return &funcServerOption{
-		f: f,
-	}
-}
-
-// funcServerOption wraps a function that modifies serverOptions into an
-// implementation of the ServerOption interface.
-type funcServerOption struct {
-	f func(*serverOptions)
-}
-
-func (fdo *funcServerOption) apply(do *serverOptions) {
-	fdo.f(do)
 }
 
 type Server struct {
@@ -99,7 +51,6 @@ func NewServer(
 
 	srv := &Server{wg: wg, hds: hds, sds: sds, err: errorChannel, shutdownCalled: shutdownCalled, port: port, opts: *opts}
 	chainUnaryServerInterceptors(srv)
-	chainStreamServerInterceptors(srv)
 
 	srv.initRoutes(shutdownCalled)
 
