@@ -1,4 +1,4 @@
-package main
+package http
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 )
 
 type Server struct {
+	opts           serverOptions
 	hs             http.Server
 	hds            datastore.HashDataStore
 	sds            datastore.StatsDataStore
@@ -28,8 +29,17 @@ func NewServer(
 	shutdownCalled chan struct{},
 	errorChannel chan error,
 	port uint16,
+	opt ...ServerOption,
 ) *Server {
-	srv := &Server{wg: wg, hds: hds, sds: sds, err: errorChannel, shutdownCalled: shutdownCalled, port: port}
+	opts := &serverOptions{}
+
+	for _, o := range opt {
+		o.apply(opts)
+	}
+
+	srv := &Server{wg: wg, hds: hds, sds: sds, err: errorChannel, shutdownCalled: shutdownCalled, port: port, opts: *opts}
+	chainUnaryServerInterceptors(srv)
+
 	srv.initRoutes(shutdownCalled)
 
 	return srv
@@ -49,7 +59,9 @@ func (srv *Server) initRoutes(shutdownChannel chan<- struct{}) {
 	routes["/stats"] = statsHandler
 
 	for routeSpec, handler := range routes {
-		superHandler := handlers.NewSuperHandler(handler, srv.sds)
+		// TODO Use interceptor instead of SuperHandler
+
+		superHandler := NewSuperHandler(handler, srv.sds, srv.opts.unaryInt)
 		http.Handle(routeSpec, superHandler)
 	}
 }
